@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pembuat API Key</title>
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      background-color: #ffe6f0;
+      color: #4a4a4a;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+
+    .container {
+      background-color: #fff0f6;
+      border-radius: 20px;
+      box-shadow: 0 4px 10px rgba(255, 0, 128, 0.2);
+      padding: 30px;
+      width: 90%;
+      max-width: 380px;
+      text-align: center;
+      position: relative;
+    }
+
+    h1 {
+      color: #ff4081;
+      margin-bottom: 20px;
+      font-size: 1.6rem;
+    }
+
+    button {
+      background-color: #ff4081;
+      color: white;
+      border: none;
+      border-radius: 12px;
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin-top: 10px;
+    }
+
+    button:hover:not(:disabled) {
+      background-color: #ff6699;
+      transform: scale(1.03);
+    }
+
+    button:disabled {
+      background-color: #ffb6c1;
+      cursor: not-allowed;
+    }
+
+    .textarea-wrapper {
+      position: relative;
+      margin-top: 20px;
+    }
+
+    textarea {
+      width: 100%;
+      height: 120px;
+      border: 2px solid #ff80ab;
+      border-radius: 10px;
+      padding: 10px;
+      padding-bottom: 40px;
+      font-size: 14px;
+      resize: none;
+      background-color: #fff;
+      color: #333;
+      box-sizing: border-box;
+      outline: none;
+    }
+
+    #btnCopy {
+      position: absolute;
+      bottom: 10px;
+      right: 10px;
+      background-color: #ff4081;
+      border: none;
+      color: white;
+      border-radius: 8px;
+      font-size: 12px;
+      padding: 5px 10px;
+      cursor: pointer;
+      display: none;
+      transition: all 0.3s ease;
+      box-shadow: 0 2px 5px rgba(255, 0, 128, 0.2);
+    }
+
+    #btnCopy:hover {
+      background-color: #ff6699;
+      transform: scale(1.05);
+    }
+
+    .copy-success {
+      color: #4caf50;
+      margin-top: 10px;
+      font-size: 14px;
+      display: none;
+    }
+
+    .error-message {
+      color: #e53935;
+      margin-top: 10px;
+      font-size: 14px;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Buat API Key</h1>
+    <button id="btnBuat" onclick="buatApiKey()">🔑 Buat API Key</button>
+
+    <div class="textarea-wrapper">
+      <textarea id="apikey" readonly placeholder="API Key akan muncul di sini..."></textarea>
+      <button id="btnCopy" onclick="copyApiKey()">📋 Copy</button>
+    </div>
+
+    <p class="copy-success" id="copySuccess">✅ API Key berhasil disalin!</p>
+    <p class="error-message" id="errorMsg">❌ Gagal membuat API Key!</p>
+  </div>
+
+  <script>
+    async function buatApiKey() {
+      const textarea = document.getElementById('apikey');
+      const button = document.getElementById('btnBuat');
+      const copyButton = document.getElementById('btnCopy');
+      const copySuccess = document.getElementById('copySuccess');
+      const errorMsg = document.getElementById('errorMsg');
+
+      // Reset tampilan
+      button.disabled = true;
+      button.textContent = "⏳ Memproses...";
+      textarea.value = "";
+      copyButton.style.display = "none";
+      copySuccess.style.display = "none";
+      errorMsg.style.display = "none";
+
+      try {
+        const response = await fetch('/create', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' }
+        });
+
+        if (!response.ok) throw new Error('Gagal terhubung ke server');
+
+        const data = await response.json();
+
+        if (data.apiKey) {
+          textarea.value = data.apiKey;
+          copyButton.style.display = "block";
+        } else {
+          textarea.value = "❌ Gagal membuat API Key.";
+          errorMsg.style.display = "block";
+        }
+      } catch (err) {
+        textarea.value = "⚠️ Terjadi kesalahan: " + err.message;
+        errorMsg.style.display = "block";
+      } finally {
+        button.disabled = false;
+        button.textContent = "🔑 Buat API Key";
+      }
+    }
+
+    function copyApiKey() {
+      const textarea = document.getElementById('apikey');
+      const copyButton = document.getElementById('btnCopy');
+      const copySuccess = document.getElementById('copySuccess');
+
+      navigator.clipboard.writeText(textarea.value).then(() => {
+        copyButton.textContent = "✔ Disalin";
+        copySuccess.style.display = "block";
+
+        setTimeout(() => {
+          copyButton.textContent = "📋 Copy";
+          copySuccess.style.display = "none";
+        }, 2000);
+      });
+    }
+  </script>
+</body>
+</html>
