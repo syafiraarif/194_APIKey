@@ -40,23 +40,20 @@ function generateApiKey() {
 // ===============================
 app.post('/create', (req, res) => {
   const apiKey = generateApiKey();
-  const description = req.body?.description || null;
 
-  db.query(
-    'INSERT INTO api_keys (api_key, description) VALUES (?, ?)',
-    [apiKey, description],
-    (err, result) => {
-      if (err) {
-        console.error('❌ Gagal menyimpan API key:', err);
-        return res
-          .status(500)
-          .json({ success: false, message: 'Gagal menyimpan API key' });
-      }
-
-      console.log(`✅ API Key baru disimpan ke DB: ${apiKey}`);
-      res.json({ success: true, apiKey });
+  const query = 'INSERT INTO apikeyd (apikey) VALUES (?)';
+  db.query(query, [apiKey], (err, result) => {
+    if (err) {
+      console.error('❌ Gagal menyimpan API key:', err.message);
+      return res.status(500).json({
+        success: false,
+        message: 'Gagal menyimpan API key ke database',
+      });
     }
-  );
+
+    console.log(`✅ API Key baru disimpan ke DB: ${apiKey}`);
+    res.json({ success: true, apiKey });
+  });
 });
 
 // ===============================
@@ -66,17 +63,19 @@ app.post('/cekapi', (req, res) => {
   const { apiKey } = req.body;
 
   if (!apiKey) {
-    return res
-      .status(400)
-      .json({ success: false, message: 'API key tidak boleh kosong!' });
+    return res.status(400).json({
+      success: false,
+      message: 'API key tidak boleh kosong!',
+    });
   }
 
-  db.query('SELECT * FROM api_keys WHERE api_key = ?', [apiKey], (err, results) => {
+  db.query('SELECT * FROM apikeyd WHERE apikey = ?', [apiKey], (err, results) => {
     if (err) {
-      console.error('❌ Error saat cek API key:', err);
-      return res
-        .status(500)
-        .json({ success: false, message: 'Kesalahan server' });
+      console.error('❌ Error saat cek API key:', err.message);
+      return res.status(500).json({
+        success: false,
+        message: 'Kesalahan server saat memeriksa API key',
+      });
     }
 
     if (results.length > 0) {
@@ -86,6 +85,7 @@ app.post('/cekapi', (req, res) => {
     }
   });
 });
+
 
 // ===============================
 // 🚀 JALANKAN SERVER
