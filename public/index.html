@@ -1,9 +1,10 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Pembuat API Key</title>
+  <title>Buat User + API Key</title>
   <style>
     body {
       font-family: 'Poppins', sans-serif;
@@ -22,15 +23,18 @@
       box-shadow: 0 4px 10px rgba(255, 0, 128, 0.2);
       padding: 30px;
       width: 90%;
-      max-width: 380px;
+      max-width: 400px;
       text-align: center;
-      position: relative;
     }
 
-    h1 {
-      color: #ff4081;
-      margin-bottom: 20px;
-      font-size: 1.6rem;
+    input {
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+      border: 2px solid #ff80ab;
+      border-radius: 10px;
+      font-size: 14px;
+      box-sizing: border-box;
     }
 
     button {
@@ -41,147 +45,59 @@
       padding: 10px 20px;
       font-size: 16px;
       cursor: pointer;
-      transition: all 0.3s ease;
+      transition: 0.3s;
       margin-top: 10px;
-    }
-
-    button:hover:not(:disabled) {
-      background-color: #ff6699;
-      transform: scale(1.03);
-    }
-
-    button:disabled {
-      background-color: #ffb6c1;
-      cursor: not-allowed;
-    }
-
-    .textarea-wrapper {
-      position: relative;
-      margin-top: 20px;
-    }
-
-    textarea {
       width: 100%;
-      height: 120px;
-      border: 2px solid #ff80ab;
-      border-radius: 10px;
-      padding: 10px;
-      padding-bottom: 40px;
-      font-size: 14px;
-      resize: none;
-      background-color: #fff;
-      color: #333;
-      box-sizing: border-box;
-      outline: none;
     }
 
-    #btnCopy {
-      position: absolute;
-      bottom: 10px;
-      right: 10px;
-      background-color: #ff4081;
-      border: none;
-      color: white;
-      border-radius: 8px;
-      font-size: 12px;
-      padding: 5px 10px;
-      cursor: pointer;
-      display: none;
-      transition: all 0.3s ease;
-      box-shadow: 0 2px 5px rgba(255, 0, 128, 0.2);
-    }
-
-    #btnCopy:hover {
+    button:hover {
       background-color: #ff6699;
-      transform: scale(1.05);
-    }
-
-    .copy-success {
-      color: #4caf50;
-      margin-top: 10px;
-      font-size: 14px;
-      display: none;
-    }
-
-    .error-message {
-      color: #e53935;
-      margin-top: 10px;
-      font-size: 14px;
-      display: none;
     }
   </style>
 </head>
+
 <body>
   <div class="container">
-    <h1>Buat API Key</h1>
-    <button id="btnBuat" onclick="buatApiKey()">🔑 Buat API Key</button>
+    <h1>Buat User</h1>
 
-    <div class="textarea-wrapper">
-      <textarea id="apikey" readonly placeholder="API Key akan muncul di sini..."></textarea>
-      <button id="btnCopy" onclick="copyApiKey()">📋 Copy</button>
-    </div>
+    <input type="text" id="firstname" placeholder="Nama Depan" />
+    <input type="text" id="lastname" placeholder="Nama Belakang" />
+    <input type="email" id="email" placeholder="Email" />
 
-    <p class="copy-success" id="copySuccess">✅ API Key berhasil disalin!</p>
-    <p class="error-message" id="errorMsg">❌ Gagal membuat API Key!</p>
+    <button onclick="generateAPI()">🔑 Generate API Key</button>
+    <input type="text" id="apikey" placeholder="API Key" readonly />
+
+    <button onclick="saveUser()">💾 Save User</button>
+
+    <p id="status" style="margin-top:10px; font-weight:bold;"></p>
   </div>
 
   <script>
-    async function buatApiKey() {
-      const textarea = document.getElementById('apikey');
-      const button = document.getElementById('btnBuat');
-      const copyButton = document.getElementById('btnCopy');
-      const copySuccess = document.getElementById('copySuccess');
-      const errorMsg = document.getElementById('errorMsg');
+    async function generateAPI() {
+      const res = await fetch('/create', { method: 'POST' });
+      const data = await res.json();
 
-      // Reset tampilan
-      button.disabled = true;
-      button.textContent = "⏳ Memproses...";
-      textarea.value = "";
-      copyButton.style.display = "none";
-      copySuccess.style.display = "none";
-      errorMsg.style.display = "none";
-
-      try {
-        const response = await fetch('/create', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' }
-        });
-
-        if (!response.ok) throw new Error('Gagal terhubung ke server');
-
-        const data = await response.json();
-
-        if (data.apiKey) {
-          textarea.value = data.apiKey;
-          copyButton.style.display = "block";
-        } else {
-          textarea.value = "❌ Gagal membuat API Key.";
-          errorMsg.style.display = "block";
-        }
-      } catch (err) {
-        textarea.value = "⚠️ Terjadi kesalahan: " + err.message;
-        errorMsg.style.display = "block";
-      } finally {
-        button.disabled = false;
-        button.textContent = "🔑 Buat API Key";
+      if (data.apiKey) {
+        document.getElementById('apikey').value = data.apiKey;
       }
     }
 
-    function copyApiKey() {
-      const textarea = document.getElementById('apikey');
-      const copyButton = document.getElementById('btnCopy');
-      const copySuccess = document.getElementById('copySuccess');
+    async function saveUser() {
+      const firstname = document.getElementById('firstname').value;
+      const lastname = document.getElementById('lastname').value;
+      const email = document.getElementById('email').value;
+      const apikey = document.getElementById('apikey').value;
 
-      navigator.clipboard.writeText(textarea.value).then(() => {
-        copyButton.textContent = "✔ Disalin";
-        copySuccess.style.display = "block";
-
-        setTimeout(() => {
-          copyButton.textContent = "📋 Copy";
-          copySuccess.style.display = "none";
-        }, 2000);
+      const res = await fetch('/user/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ firstname, lastname, email, apikey })
       });
+
+      const data = await res.json();
+      document.getElementById('status').innerText = data.message;
     }
   </script>
 </body>
+
 </html>
